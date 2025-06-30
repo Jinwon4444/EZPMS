@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ezen.task">
+
+	<!-- 과제 등록 -->
+	<insert id="insert" parameterType="com.ezen.vo.taskVO" useGeneratedKeys="true" keyProperty="tno">
+		insert into task (lno, ttitle, tnote, tend) 
+		values (#{lno}, #{ttitle}, #{tnote}, #{tend})
+	</insert>
+
+	<!-- 과제 수정 -->
+	<update id="update" parameterType="com.ezen.vo.taskVO">
+		update task set
+		ttitle = #{ttitle}, 
+		tnote  = #{tnote},	
+		tend   = #{tend},
+		tdate  = #{tdate}
+		
+		where tno = #{tno}
+	</update>
+	
+	<!-- 과제 상세 -->
+	<select id="view" parameterType="java.lang.String" resultType="com.ezen.vo.taskVO"> 
+		select tno, lno, ttitle, tnote, tend 
+		from task
+		where tno = #{tno}
+	</select>
+	
+	<!-- 과제 상세 학생목록 -->
+	<select id="learnlist" parameterType="java.lang.String" resultType="com.ezen.vo.userVO">
+		select u.name, u.tel, s.sno, s.score, s.answer
+		from task t
+		join learnlist li on t.lno = li.lno
+		left join user u on li.userid = u.userid
+		left join subtask s on s.userid= li.userid and s.tno = t.tno
+		where t.tno = #{tno}
+	</select>
+	
+	<!-- 학생 과제제출 확인 -->
+	<select id="learncount" parameterType="java.lang.String" resultType="java.lang.Integer">
+		select count(*)
+		from task t
+		join learnlist li on t.lno = li.lno
+		left join user u on li.userid = u.userid
+		left join subtask s on s.userid= li.userid and s.tno = t.tno
+		where t.tno = #{tno} and s.userid = #{userid}
+	</select>
+	
+	<!-- 과제 제출 뷰 -->
+	<select id="taskview" parameterType="com.ezen.vo.taskVO" resultType="com.ezen.vo.subtaskVO"> 
+		select s.sno,s.answer,s.score,u.name,t.lno
+		from subtask s
+		join user u on u.userid = s.userid
+		join task t on s.tno = t.tno
+		where s.tno = #{tno} and s.sno = #{sno} 
+	</select>
+	
+	<!-- 과제 채점 -->
+	<update id="evaluateok" parameterType="com.ezen.vo.subtaskVO">
+		update subtask set 
+		score = #{score}
+		where sno=#{sno}
+	</update>
+	
+	<!-- 강의 갯수 확인 -->
+	<select id="total" parameterType="com.ezen.vo.searchVO" resultType="java.lang.Integer">
+		select count(*) from lecture l
+		join user u on l.userid = u.userid
+		where l.userid = #{userid}
+		and curdate() &lt; l.lend
+		<if test='keyword != null and keyword != ""'>
+			 and ${index} like '%${keyword}%'
+		</if>						
+	</select>
+	
+	<!-- 강의 목록 조회 -->
+	<select id="list" parameterType="com.ezen.vo.searchVO" resultType="com.ezen.vo.lectureVO">
+		select l.lno,l.ltitle,date(l.lstart) as lstart,date(l.lend) as lend,u.name,
+		(select count(*) from task t where t.lno = l.lno) as tcount,
+		(select count(*) from learnlist s where s.lno = l.lno) as scount
+		from lecture l
+		join user u on l.userid = u.userid
+		where l.userid = #{userid}
+		and curdate() &lt; l.lend
+		<if test='keyword != null and keyword != ""'>
+			and ${index} like '%${keyword}%'
+		</if>
+		order by lno desc
+		limit #{offset},5
+	</select>
+	
+	
+	<!-- 강의 목록 조회 -->
+	<select id="tasktotal" parameterType="com.ezen.vo.searchVO" resultType="java.lang.Integer">
+		select count(*)
+		from task t
+		where lno = #{no}					
+	</select>
+	
+	<!-- 과제 목록 조회-->
+	<select id="tasklist" parameterType="com.ezen.vo.searchVO" resultType="com.ezen.vo.taskVO">
+		select t.tno,t.ttitle,t.tend,count(s.tno) as count
+		from task t
+		left join subtask s on t.tno = s.tno
+		where t.lno = #{no}
+		group by t.tno
+		order by t.tno desc;
+	</select>
+	
+	<!-- 수강 학생 수 -->
+	<select id="stutotal" parameterType="com.ezen.vo.searchVO" resultType="java.lang.Integer">
+		select count(*)
+		from learnlist
+		where lno = #{no}					
+	</select>
+	
+</mapper>

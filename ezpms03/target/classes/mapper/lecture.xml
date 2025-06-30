@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ezen.lecture">
+
+	<insert id="insert" parameterType="com.ezen.vo.lectureVO" useGeneratedKeys="true" keyProperty="lno">
+		insert into lecture (userid,ltitle,lnote,lstart,lend,ltime,llimit)
+		values (#{userid}, #{ltitle}, #{lnote}, #{lstart}, #{lend}, #{ltime}, #{llimit})
+	</insert>
+
+
+	<select id="view" parameterType="java.lang.String" resultType="com.ezen.vo.lectureVO"> 
+		select lno,ltitle,lnote,date(lstart) as lstart,date(lend) as lend,ltime,llimit,ldate,
+		(select name from user where userid = lecture.userid) as name
+		from lecture
+		where lno = #{lno}
+	</select>
+	
+	<select id="learnlist" parameterType="com.ezen.vo.searchVO" resultType="com.ezen.vo.userVO">
+		select u.userid, u.name, u.gender, u.birthday, u.tel, u.email
+		from learnlist li
+		join lecture l on l.lno = li.lno
+		join user u on li.userid = u.userid
+		where l.lno = #{lno}
+	</select>
+	
+	
+	<select id="total" parameterType="com.ezen.vo.searchVO" resultType="java.lang.Integer">
+		select count(*) from lecture l
+		join user u on l.userid = u.userid
+		where l.userid = #{userid}
+		<if test='keyword != null and keyword != ""'>
+			 and ${index} like '%${keyword}%'
+		</if>						
+	</select>
+	
+	<select id="list" parameterType="com.ezen.vo.searchVO" resultType="com.ezen.vo.lectureVO">
+		select l.lno,l.ltitle,date(l.lstart) as lstart,date(l.lend) as lend,u.name
+		from lecture l
+		join user u on l.userid = u.userid
+		where l.userid = #{userid}
+		<if test='keyword != null and keyword != ""'>
+			and ${index} like '%${keyword}%'
+		</if>
+		order by lno desc
+		limit #{offset},10
+	</select>
+	
+	<update id="update" parameterType="com.ezen.vo.lectureVO">
+		update lecture set
+		ltitle = #{ltitle}, 
+		lnote  = #{lnote},	
+		lstart = #{lstart},
+		lend   = #{lend},
+		ltime  = #{ltime}
+		
+		where lno = #{lno}
+	</update>
+</mapper>

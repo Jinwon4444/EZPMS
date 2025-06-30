@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ezen.member">
+	
+	<!-- 교수 등록 -->
+	<insert id="regist" parameterType="com.ezen.vo.userVO">
+		insert into user (userid, userpw, name, tel, birthday, gender, email, level) 
+		values(#{userid}, md5(#{userpw}), #{name}, #{tel}, #{birthday}, #{gender}, #{email}, 'T')
+	</insert>
+	
+	<!-- 회원관리 목록 카운트 -->
+	<select id="total" parameterType="com.ezen.vo.searchVO" resultType="java.lang.Integer">
+		select count(*) from user where ${index}
+		<if test='keyword != null and keyword != ""'>
+			and name like '%${keyword}%'
+		</if>						
+	</select>
+	
+	<!-- 회원관리 목록 -->
+	<select id="list" parameterType="com.ezen.vo.searchVO" resultType="com.ezen.vo.userVO">
+		select userid, name, tel, birthday, gender, email, state, level 
+		from user where ${index} 
+		<if test='keyword != null and keyword != ""'>
+			and name like '%${keyword}%' 
+		</if>
+		<if test='sort == "name"'>
+			order by name asc 
+		</if>
+		<if test='sort == "birthday"'>
+			order by birthday asc 
+		</if>
+		limit #{offset},10
+	</select>
+	
+	<!-- 개인정보 수정 -->
+	<update id="modify" parameterType="com.ezen.vo.userVO">
+		update user set name = #{name}, tel = #{tel}, birthday = #{birthday}, gender = #{gender}, email = #{email} 
+		where userid = #{userid}
+	</update>
+	
+	<!-- 회원 삭제 -->
+	<delete id="delete" parameterType="java.lang.String">
+		delete from user where userid = #{userid}
+	</delete>
+	
+	<!-- 회원 복구 -->
+	<update id="restore" parameterType="java.lang.String">
+		update user set state = 'Y' 
+		where userid = #{userid}
+	</update>
+</mapper>

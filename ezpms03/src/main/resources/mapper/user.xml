@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ezen.user">
+
+	<!-- 회원가입 -->
+	<insert id="join" parameterType="com.ezen.vo.userVO">
+		insert into user (userid, userpw, name, tel, birthday, gender, email, level) 
+		values(#{userid}, md5(#{userpw}), #{name}, #{tel}, #{birthday}, #{gender}, #{email}, #{level})
+	</insert>
+	
+	<!-- 로그인 -->
+	<select id="login" parameterType="java.lang.String"
+		resultType="com.ezen.vo.userVO">
+		select userid, name, state, level 
+		from user 
+		where userid = #{userid} and userpw = md5(#{userpw})
+	</select>
+	
+	<!-- 아이디 중복체크 -->
+	<select id="checkid" parameterType="java.lang.String" 
+		resultType="java.lang.Integer">
+		select count(*) 
+		from user 
+		where userid = #{userid}
+	</select>
+	
+	<!-- 이메일 중복체크 -->
+	<select id="checkemail" parameterType="java.lang.String" 
+		resultType="java.lang.Integer">
+		select count(*) 
+		from user 
+		where email = #{email}
+	</select>
+	
+	<!-- 아이디 찾기 -->
+	<select id="findid" parameterType="com.ezen.vo.userVO" 
+		resultType="java.lang.String">
+		select userid 
+		from user 
+		where name = #{name} and email = #{email}
+	</select>
+	
+	<!-- 비밀번호 찾기 -->
+	<select id="findpwd" parameterType="com.ezen.vo.userVO" 
+		resultType="java.lang.Integer">
+		select count(*) 
+		from user 
+		where userid = #{userid} and email = #{email}
+	</select>
+	
+	<!-- 비밀번호 변경 -->
+	<update id="modifypwd" parameterType="com.ezen.vo.userVO">
+		update user set userpw = md5(#{userpw}) 
+		where userid = #{userid}
+	</update>
+	
+	<!-- 비밀번호 재발급 -->
+	<update id="newpwd" parameterType="com.ezen.vo.userVO">
+		update user set userpw = md5(#{userpw}) 
+		where userid = #{userid} and email = #{email}
+	</update>
+	
+	<!-- 마이페이지 -->
+	<select id="mypage" parameterType="java.lang.String"
+		resultType="com.ezen.vo.userVO">
+		select name, gender, level, birthday, tel, state, email 
+		from user 
+		where userid = #{userid}
+	</select>
+	
+	<!-- 마이페이지 학생 미제출 과제 확인 -->
+	<select id="mypagetask" parameterType="java.lang.String" 
+		resultType="java.lang.Integer">
+		select count(*) from (select l.ltitle, t.ttitle, t.tno, t.tend from user u
+		left join learnlist li on u.userid = li.userid
+		left join lecture l on li.lno = l.lno
+		left join task t on l.lno = t.lno
+		where u.userid = #{userid}) t
+		where not t.tno = any (select tno from subtask where userid = #{userid})
+	</select>
+	
+	<!-- 회원 임시 탈퇴 -->
+	<update id="exit" parameterType="java.lang.String">
+		update user set state = 'N' 
+		where userid = #{userid}
+	</update>
+	
+</mapper>

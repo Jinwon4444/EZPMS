@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ezen.mgrlecture">
+
+	<!-- 목록 글 카운팅 -->
+	<select id="total" parameterType="com.ezen.vo.searchVO" resultType="java.lang.Integer">
+		select count(*) from lecture l
+		join user u on l.userid = u.userid
+		<where>
+			<choose>
+				<when test='index == "1"'><![CDATA[ sysdate() < lstart ]]></when>
+				<when test='index == "2"'>sysdate() between lstart and lend </when>
+				<when test='index == "3"'><![CDATA[ sysdate() > lend ]]></when>
+				<otherwise>	</otherwise>
+			</choose>
+			<if test='keyword != null and keyword != ""'>
+				and l.ltitle like '%${keyword}%'
+			</if>
+			<if test='keyword2 != null and keyword2 != ""'>
+				and u.name like '%${keyword2}%'
+			</if>
+		</where>
+	</select>
+	
+	<!-- 강의 관리 목록 -->
+	<select id="list" parameterType="com.ezen.vo.searchVO" resultType="com.ezen.vo.lectureVO">
+		select l.lno, l.ltitle, date(l.lstart) as lstart, date(l.lend) as lend, u.name
+		from lecture l
+		join user u on l.userid = u.userid
+		<where>
+			<choose>
+				<when test='index == "1"'><![CDATA[ sysdate() < lstart ]]></when>
+				<when test='index == "2"'> sysdate() between lstart and lend </when>
+				<when test='index == "3"'><![CDATA[ sysdate() > lend ]]></when>
+				<otherwise> </otherwise>
+			</choose>
+			<if test='keyword != null and keyword != ""'>
+				and l.ltitle like '%${keyword}%'
+			</if>
+			<if test='keyword2 != null and keyword2 != ""'>
+				and u.name like '%${keyword2}%'
+			</if>
+		</where>
+			<if test='sort == "ltitle"'>
+				order by ltitle asc, lstart asc 
+			</if>
+			<if test='sort == "u.name"'>
+				order by u.name asc, lstart asc 
+			</if>
+			<if test='sort == ""'>
+				order by lstart asc 
+			</if>
+		limit #{offset},10
+	</select>
+	
+	<!-- 강의 수강생 취소 -->
+	<delete id="learndelete" parameterType="java.lang.String">
+		delete from learnlist 
+		where userid=#{userid}
+	</delete>
+</mapper>

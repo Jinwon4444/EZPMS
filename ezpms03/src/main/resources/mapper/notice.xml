@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ezen.notice">
+
+	<insert id="insert" parameterType="com.ezen.vo.noticeVO" useGeneratedKeys="true" keyProperty="nno">
+		insert into notice (userid,ntitle,nnote)
+		values (#{userid}, #{ntitle}, #{nnote})
+	</insert>
+	
+	
+	<select id="view" parameterType="java.lang.String" resultType="com.ezen.vo.noticeVO"> 
+		select nno,userid,ntitle,nnote,ndate,
+		(select name from user where userid = notice.userid) as name
+		from notice
+		where nno = #{nno}
+	</select>
+	
+	
+	<update id="update" parameterType="com.ezen.vo.noticeVO">
+		update notice set
+		ntitle = #{ntitle}, 
+		nnote  = #{nnote}	
+
+		where nno = #{nno}
+	</update>
+	
+	<delete id="delete" parameterType="java.lang.String">
+		delete from notice where nno = #{nno}
+	</delete>
+	
+	<select id="total" parameterType="com.ezen.vo.searchVO" resultType="java.lang.Integer">
+		select count(*) from notice n
+		join user u on n.userid = u.userid
+		<if test='keyword != null and keyword != ""'>
+			where ${index} like '%${keyword}%'
+		</if>						
+	</select>
+	
+	<select id="list" parameterType="com.ezen.vo.searchVO" resultType="com.ezen.vo.noticeVO">
+		select n.nno,n.ntitle,n.ndate,u.name
+		from notice n
+		join user u on n.userid = u.userid
+		<if test='keyword != null and keyword != ""'>
+			where ${index} like '%${keyword}%'
+		</if>
+		order by nno desc
+		limit #{offset},10
+	</select>
+</mapper>

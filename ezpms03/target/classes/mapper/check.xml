@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ezen.check">
+	<!-- 간단한 권한 체크 -->
+	<select id="check" parameterType="com.ezen.vo.checkVO" resultType="java.lang.Integer">
+		select count(*) from ${checktable}
+		where ${checkno} = #{no} and userid = #{userid}
+	</select>
+	
+	<!-- task 권한 체크 -->
+	<select id="taskcheck" parameterType="com.ezen.vo.checkVO" resultType="java.lang.Integer">
+		select count(*) from ${checktable}
+		where ${checkno} = #{no} and 
+		<if test='checktable == "lecture"'>
+			userid = #{userid}
+		</if>
+		<if test='checktable == "task"'>
+			lno = (select l.lno from lecture l left join task t on l.lno = t.lno 
+			where t.tno = #{no} and l.userid = #{userid}) 
+		</if>
+	</select>
+</mapper>
